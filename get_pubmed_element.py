@@ -16,8 +16,9 @@ def extract_sentences(in_xml):#, folder):
     for doc in docs.findall('.//MedlineCitation'):
         text = ''
         doc_id = [item.text for item in doc.findall('PMID')][0]
-        print(doc_id)
-
+    #     print(doc_id)
+        year = [item.text for item in doc.findall('./DateCompleted/Year')]
+        print(doc_id,year)
 
 def argument_parser():
     parser = argparse.ArgumentParser(description="extract sentence and title from pubmed elements")
