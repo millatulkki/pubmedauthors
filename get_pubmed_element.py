@@ -17,15 +17,23 @@ def extract_sentences(in_xml):#, folder):
     for doc in docs.findall('.//MedlineCitation'):
         num += 1
 
+        # lastnames of the authors:
+        text = ''
+        authors = [a.text for a in doc.findall('Article/AuthorList/Author/LastName')]
+        print(authors)
+
+        print("Collectives:")
+
+        # collective names:
+        text = ''
+        collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
+        print(collectives)
+
         # for list in doc.findall('.//AuthorList'):
         #     name = list.get('LastName')
         #     print(name)
 
     # tags = [elem.tag for elem in docs.iter()]
-
-        # text = ''
-        # authors = [a.text for a in doc.findall('Article/AuthorList/Author/LastName')]
-        # print(authors)
 
         # for article in doc.iter('Author'): # the attributes of 'Author'
         #     print(article.attrib)
