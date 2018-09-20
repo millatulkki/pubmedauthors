@@ -13,32 +13,38 @@ import xml.etree.ElementTree as ET
 def extract_sentences(in_xml):#, folder):
     tree = ET.parse(gzip.open(in_xml))
     docs = tree.getroot() # get root element
-    num = 0 # number of documents
+
+    numDocuments = 0 # number of documents
+    numAuthors = 0 # number of authors
+    numCollectives = 0 # number of collectives
+    numAffiliations = 0 # number of affiliations
+
+    authors = [] # list of authors
+    collectives = [] # list of collectives
+
     for doc in docs.findall('.//MedlineCitation'):
-        num += 1
-
+        numDocuments += 1
         # lastnames of the authors:
+        # WHAT IF TWO WITH SAME LASTNAME :(
         text = ''
-        authors = [a.text for a in doc.findall('Article/AuthorList/Author/LastName')]
-        print(authors)
-
-        print("Collectives:")
+        for a in doc.findall('Article/AuthorList/Author/LastName'):
+            if a.text not in authors:
+                authors.append(a.text)
+                numAuthors += 1
 
         # collective names:
-        text = ''
-        collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
-        print(collectives)
+        for col in doc.findall('Article/AuthorList/Author/CollectiveName'):
+            if col.text not in collectives:
+                collectives.append(col.text)
+                numCollectives += 1
 
-        # for list in doc.findall('.//AuthorList'):
-        #     name = list.get('LastName')
-        #     print(name)
+# printing out the results:
 
-    # tags = [elem.tag for elem in docs.iter()]
+    print('Number of documents: ',str(numDocuments))
+    print('Number of authors: ',str(numAuthors))
+    print('Number of collectives: ',str(numCollectives))
 
-        # for article in doc.iter('Author'): # the attributes of 'Author'
-        #     print(article.attrib)
-
-    print('Number of documents: ',str(num))
+    # print(collectives)
 
 ### THESE WORK ###
         # for item in doc.findall('PMID'):
@@ -63,3 +69,21 @@ if __name__ == '__main__':
 # documents ?
 # no affiliation ?
 # first author has affiliation ?
+
+
+        # collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
+        # if collectives != '':
+        #     print(collectives)
+
+        # for list in doc.findall('.//AuthorList'):
+        #     name = list.get('LastName')
+        #     print(name)
+
+    # tags = [elem.tag for elem in docs.iter()]
+
+        # for article in doc.iter('Author'): # the attributes of 'Author'
+        #     print(article.attrib)
+
+
+            # authors = [a.text for a in doc.findall('Article/AuthorList/Author/LastName')]
+            # print(authors)
