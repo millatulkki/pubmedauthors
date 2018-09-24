@@ -27,10 +27,17 @@ def extract_sentences(in_xml):#, folder):
         # lastnames of the authors:
         # WHAT IF TWO WITH SAME LASTNAME :(
         text = ''
-        for a in doc.findall('Article/AuthorList/Author/LastName'):
-            if a.text not in authors:
-                authors.append(a.text)
-                numAuthors += 1
+        # for a in doc.findall('Article/AuthorList/Author/LastName'):
+        #     if a.text not in authors:
+        #         authors.append(a.text)
+        #         numAuthors += 1
+        for a in doc.findall('Article/AuthorList/'):
+            initials = a.find('Initials')
+            lastname = a.find('LastName')
+            if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element):
+                authors.append((initials.text,lastname.text)) # appends to a list
+            elif isinstance(lastname,ET.Element):
+                authors.append(lastname.text)
 
         # collective names:
         for col in doc.findall('Article/AuthorList/Author/CollectiveName'):
@@ -39,9 +46,8 @@ def extract_sentences(in_xml):#, folder):
                 numCollectives += 1
 
 # printing out the results:
-
     print('Number of documents: ',str(numDocuments))
-    print('Number of authors: ',str(numAuthors))
+    print('Number of authors: ',len(authors))
     print('Number of collectives: ',str(numCollectives))
 
     # print(collectives)
@@ -69,6 +75,8 @@ if __name__ == '__main__':
 # documents ?
 # no affiliation ?
 # first author has affiliation ?
+
+# how to save the info..? author + affiliation + what else?
 
 
         # collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
