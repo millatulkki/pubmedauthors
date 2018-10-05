@@ -21,23 +21,47 @@ def extract_sentences(in_xml):#, folder):
 
     authors = [] # list of authors
     collectives = [] # list of collectives
+    firstHasAffiliation = [] # when only the first author has affiliation
+    noAffiliations = [] # when does not have affiliation at all
 
     for doc in docs.findall('.//MedlineCitation'):
         numDocuments += 1
-        # lastnames of the authors:
-        # WHAT IF TWO WITH SAME LASTNAME :(
+        first = 0 # tells when it's time for the first author: after every author is appended by 1
+
         text = ''
-        # for a in doc.findall('Article/AuthorList/Author/LastName'):
-        #     if a.text not in authors:
-        #         authors.append(a.text)
-        #         numAuthors += 1
+
+# collect author information from document to tuple:
+# (Initials, Lastname, Affiliation)
+# append the information to proper list
+
         for a in doc.findall('Article/AuthorList/'):
             initials = a.find('Initials')
             lastname = a.find('LastName')
-            if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element):
-                authors.append((initials.text,lastname.text)) # appends to a list
+            affiliation = a.find('AffiliationInfo/Affiliation')
+
+            # first has to check what information the author list contains
+            if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element) and isinstance(affiliation,ET.Element):
+                author = (initials.text,lastname.text,affiliation.text)
+                authors.append(author)
+                #print(author)
+                if first == 0: # if author is first one in authorlist
+                    firstHasAffiliation.append(author)
+                    #print(author)
+                first += 1 # shows that next one is not the first author
+
+            elif isinstance(lastname,ET.Element) and isinstance(initials,ET.Element):
+                #authors.append((initials.text,lastname.text)) # appends to a list
+                author = (initials.text,lastname.text)
+                authors.append(author)
+                if first == 0:
+                    noAffiliations.append(author)
+                first += 1
+                #print(author)
             elif isinstance(lastname,ET.Element):
-                authors.append(lastname.text)
+                author = lastname.text
+                authors.append(author)
+                first += 1
+                #print(author)
 
         # collective names:
         for col in doc.findall('Article/AuthorList/Author/CollectiveName'):
@@ -45,20 +69,19 @@ def extract_sentences(in_xml):#, folder):
                 collectives.append(col.text)
                 numCollectives += 1
 
+# remove duplicates from lists:
+    authors = list(set(authors))
+    firstHasAffiliation = list(set(firstHasAffiliation))
+    noAffiliations = list(set(noAffiliations))
+
 # printing out the results:
     print('Number of documents: ',str(numDocuments))
     print('Number of authors: ',len(authors))
     print('Number of collectives: ',str(numCollectives))
-
+    print('Only first author has affiliation (nr of documents): ',len(firstHasAffiliation))
+    print('No affiliation at all (nr of documents): ',len(noAffiliations))
     # print(collectives)
 
-### THESE WORK ###
-        # for item in doc.findall('PMID'):
-        #     print(item.text)
-
-        # text = ''
-        # doc_id = [item.text for item in doc.findall('PMID')][0]
-        # print(doc_id)
 
 def argument_parser():
     parser = argparse.ArgumentParser(description="extract sentence and title from pubmed elements")
@@ -78,6 +101,18 @@ if __name__ == '__main__':
 
 # how to save the info..? author + affiliation + what else?
 
+
+        # for item in doc.findall('PMID'):
+        #     print(item.text)
+
+        # text = ''
+        # doc_id = [item.text for item in doc.findall('PMID')][0]
+        # print(doc_id)
+
+        # for a in doc.findall('Article/AuthorList/Author/LastName'):
+        #     if a.text not in authors:
+        #         authors.append(a.text)
+        #         numAuthors += 1
 
         # collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
         # if collectives != '':
