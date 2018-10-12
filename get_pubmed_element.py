@@ -8,6 +8,13 @@ import re
 import glob
 import argparse
 import xml.etree.ElementTree as ET
+import json
+
+# { "PMID":
+#   {"country": "Countryname",
+#   "authorlist":[(Initials,Lastname,Affiliation),],
+#   "collectives":[Collective]}
+#}
 
 
 def extract_sentences(in_xml):#, folder):
@@ -19,18 +26,28 @@ def extract_sentences(in_xml):#, folder):
     numCollectives = 0 # number of collectives
     numAffiliations = 0 # number of affiliations
 
-    authors = [] # list of authors
-    collectives = [] # list of collectives
+    # authors = [] # list of authors
+    # collectives = [] # list of collectives
     firstHasAffiliation = [] # when only the first author has affiliation
     noAffiliations = [] # when does not have affiliation at all
 
+    fullDict = {}
+
+
+### NEW DOCUMENT STARTS HERE ###
     for doc in docs.findall('.//MedlineCitation'):
         numDocuments += 1
         first = 0 # tells when it's time for the first author: after every author is appended by 1
 
         text = ''
 
-# collect author information from document to tuple:
+        id = doc.find('PMID').text
+        infoDict = {}
+        authors = []
+        collectives = []
+        #country
+
+### collect author information from document to tuple ###
 # (Initials, Lastname, Affiliation)
 # append the information to proper list
 
@@ -39,16 +56,16 @@ def extract_sentences(in_xml):#, folder):
             lastname = a.find('LastName')
             affiliation = a.find('AffiliationInfo/Affiliation')
 
-            # first has to check what information the author list contains
+        # first has to check what information the author list contains
+            # if has full information, collects it to list
             if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element) and isinstance(affiliation,ET.Element):
                 author = (initials.text,lastname.text,affiliation.text)
                 authors.append(author)
-                #print(author)
                 if first == 0: # if author is first one in authorlist
                     firstHasAffiliation.append(author)
-                    #print(author)
                 first += 1 # shows that next one is not the first author
 
+            # if has only author initials and lastname, collects it
             elif isinstance(lastname,ET.Element) and isinstance(initials,ET.Element):
                 #authors.append((initials.text,lastname.text)) # appends to a list
                 author = (initials.text,lastname.text)
@@ -56,12 +73,12 @@ def extract_sentences(in_xml):#, folder):
                 if first == 0:
                     noAffiliations.append(author)
                 first += 1
-                #print(author)
+
+            # if has only lastname, collects it
             elif isinstance(lastname,ET.Element):
                 author = lastname.text
                 authors.append(author)
                 first += 1
-                #print(author)
 
         # collective names:
         for col in doc.findall('Article/AuthorList/Author/CollectiveName'):
@@ -69,18 +86,37 @@ def extract_sentences(in_xml):#, folder):
                 collectives.append(col.text)
                 numCollectives += 1
 
-# remove duplicates from lists:
-    authors = list(set(authors))
+        # countries:
+        for c in doc.findall('MedlineJournalInfo/Country'):
+            country = c.text
+            infoDict["Country"] = country
+
+#        infoDict["Country"] = country
+        infoDict["Collectives"] = collectives
+        infoDict["Authors"] = authors
+
+# add full information of document to dictionary:
+        fullDict[id] = infoDict
+
+## remove duplicates from lists:
+#    authors = list(set(authors))
     firstHasAffiliation = list(set(firstHasAffiliation))
     noAffiliations = list(set(noAffiliations))
 
 # printing out the results:
-    print('Number of documents: ',str(numDocuments))
-    print('Number of authors: ',len(authors))
-    print('Number of collectives: ',str(numCollectives))
-    print('Only first author has affiliation (nr of documents): ',len(firstHasAffiliation))
-    print('No affiliation at all (nr of documents): ',len(noAffiliations))
+    # print('Number of documents: ',str(numDocuments))
+    # print('Number of authors: ',len(authors))
+    # print('Number of collectives: ',str(numCollectives))
+    # print('Only first author has affiliation (nr of documents): ',len(firstHasAffiliation))
+    # print('No affiliation at all (nr of documents): ',len(noAffiliations))
     # print(collectives)
+
+    s = json.dumps(fullDict)
+    with open("test.txt","w") as f:
+        f.write(s)
+
+    for x,y in fullDict.items():
+        print(x,y)
 
 
 def argument_parser():
@@ -101,6 +137,10 @@ if __name__ == '__main__':
 
 # how to save the info..? author + affiliation + what else?
 
+### dictionary -> key: document
+# list of authors (initials, lastname, affiliation, ?country/na?)
+# json, nimeä inputin mukaan? xml replace -> json
+# tallenna eri kansioihin (tee oma)
 
         # for item in doc.findall('PMID'):
         #     print(item.text)
