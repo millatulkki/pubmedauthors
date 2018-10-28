@@ -17,7 +17,7 @@ import json
 #}
 
 
-def extract_sentences(in_xml):#, folder):
+def extract_sentences(in_xml,output_folder):#, folder):
     tree = ET.parse(gzip.open(in_xml))
     docs = tree.getroot() # get root element
 
@@ -26,8 +26,6 @@ def extract_sentences(in_xml):#, folder):
     numCollectives = 0 # number of collectives
     numAffiliations = 0 # number of affiliations
 
-    # authors = [] # list of authors
-    # collectives = [] # list of collectives
     firstHasAffiliation = [] # when only the first author has affiliation
     noAffiliations = [] # when does not have affiliation at all
 
@@ -45,7 +43,6 @@ def extract_sentences(in_xml):#, folder):
         infoDict = {}
         authors = []
         collectives = []
-        #country
 
 ### collect author information from document to tuple ###
 # (Initials, Lastname, Affiliation)
@@ -61,30 +58,31 @@ def extract_sentences(in_xml):#, folder):
             if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element) and isinstance(affiliation,ET.Element):
                 author = (initials.text,lastname.text,affiliation.text)
                 authors.append(author)
-                if first == 0: # if author is first one in authorlist
-                    firstHasAffiliation.append(author)
-                first += 1 # shows that next one is not the first author
+
+                #if first == 0: # if author is first one in authorlist
+                    #firstHasAffiliation.append(author)
+                #first += 1 # shows that next one is not the first author
 
             # if has only author initials and lastname, collects it
             elif isinstance(lastname,ET.Element) and isinstance(initials,ET.Element):
                 #authors.append((initials.text,lastname.text)) # appends to a list
                 author = (initials.text,lastname.text)
                 authors.append(author)
-                if first == 0:
-                    noAffiliations.append(author)
-                first += 1
+                #if first == 0:
+                #    noAffiliations.append(author)
+                #first += 1
 
             # if has only lastname, collects it
             elif isinstance(lastname,ET.Element):
                 author = lastname.text
                 authors.append(author)
-                first += 1
+                #first += 1
 
         # collective names:
         for col in doc.findall('Article/AuthorList/Author/CollectiveName'):
             if col.text not in collectives:
                 collectives.append(col.text)
-                numCollectives += 1
+                #numCollectives += 1
 
         # countries:
         for c in doc.findall('MedlineJournalInfo/Country'):
@@ -100,8 +98,8 @@ def extract_sentences(in_xml):#, folder):
 
 ## remove duplicates from lists:
 #    authors = list(set(authors))
-    firstHasAffiliation = list(set(firstHasAffiliation))
-    noAffiliations = list(set(noAffiliations))
+#    firstHasAffiliation = list(set(firstHasAffiliation))
+#    noAffiliations = list(set(noAffiliations))
 
 # printing out the results:
     # print('Number of documents: ',str(numDocuments))
@@ -112,16 +110,23 @@ def extract_sentences(in_xml):#, folder):
     # print(collectives)
 
     s = json.dumps(fullDict)
-    with open("test.txt","w") as f:
-        f.write(s)
+    return s
+#    filename = output_folder/in_xml + '*.json'
+#    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    # for
+    # with open("test.txt","w") as f:
+    #     # vaihtuu aina kun tulee uusi tiedosto
+    #     # esim tiedoston nimi +.json
+    #     f.write(s)
 
-    for x,y in fullDict.items():
-        print(x,y)
+    # for x,y in fullDict.items():
+    #     print(x,y)
 
 
 def argument_parser():
     parser = argparse.ArgumentParser(description="extract sentence and title from pubmed elements")
     parser.add_argument("-i", "--xml_folder", type=str, help="xml folder in gzip format")
+    parser.add_argument("-o", "--output_folder", type=str, help="output folder")
     args = parser.parse_args()
     return args
 
@@ -129,16 +134,12 @@ def argument_parser():
 if __name__ == '__main__':
     args = argument_parser()
     for in_xml in glob.glob(args.xml_folder + '*.xml.gz'):
-        extract_sentences(in_xml)#, folder_name)
+        js = extract_sentences(in_xml,args.output_folder)#, folder_name)
+        # print(js)
+        with open(in_xml + "*.json","w") as f:
+            f.write(js)
 
-# documents ?
-# no affiliation ?
-# first author has affiliation ?
 
-# how to save the info..? author + affiliation + what else?
-
-### dictionary -> key: document
-# list of authors (initials, lastname, affiliation, ?country/na?)
 # json, nimeä inputin mukaan? xml replace -> json
 # tallenna eri kansioihin (tee oma)
 
