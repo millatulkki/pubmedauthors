@@ -9,6 +9,7 @@ import glob
 import argparse
 import xml.etree.ElementTree as ET
 import json
+import pstats
 
 # { "PMID":
 #   {"country": "Countryname",
@@ -135,10 +136,12 @@ if __name__ == '__main__':
     args = argument_parser()
     for in_xml in glob.glob(args.xml_folder + '*.xml.gz'):
         js = extract_sentences(in_xml,args.output_folder)#, folder_name)
-        # print(js)
-        with open(in_xml + "*.json","w") as f:
+        with open(in_xml + ".json","w") as f:
             f.write(js)
-
+        print(in_xml + " stored as .json")
+    stats = pstats.Stats("profiling_results")
+    stats.sort_stats("tottime")
+    stats.print_stats(10)
 
 # json, nimeä inputin mukaan? xml replace -> json
 # tallenna eri kansioihin (tee oma)
