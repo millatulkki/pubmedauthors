@@ -54,10 +54,13 @@ def extract_sentences(in_xml,output_folder):#, folder):
             lastname = a.find('LastName')
             affiliation = a.find('AffiliationInfo/Affiliation')
 
+
         # first has to check what information the author list contains
             # if has full information, collects it to list
             if isinstance(lastname,ET.Element) and isinstance(initials,ET.Element) and isinstance(affiliation,ET.Element):
-                author = (initials.text,lastname.text,affiliation.text)
+                affiliation_list = affiliation.text.split()
+                country = affiliation_list[-1]
+                author = (initials.text,lastname.text,affiliation.text,country)
                 authors.append(author)
 
                 #if first == 0: # if author is first one in authorlist
@@ -97,6 +100,7 @@ def extract_sentences(in_xml,output_folder):#, folder):
 # add full information of document to dictionary:
         fullDict[id] = infoDict
 
+### FEATURES OF DICTIONARY PRINTED OUT
 ## remove duplicates from lists:
 #    authors = list(set(authors))
 #    firstHasAffiliation = list(set(firstHasAffiliation))
@@ -112,17 +116,6 @@ def extract_sentences(in_xml,output_folder):#, folder):
 
     s = json.dumps(fullDict)
     return s
-#    filename = output_folder/in_xml + '*.json'
-#    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    # for
-    # with open("test.txt","w") as f:
-    #     # vaihtuu aina kun tulee uusi tiedosto
-    #     # esim tiedoston nimi +.json
-    #     f.write(s)
-
-    # for x,y in fullDict.items():
-    #     print(x,y)
-
 
 def argument_parser():
     parser = argparse.ArgumentParser(description="extract sentence and title from pubmed elements")
@@ -134,43 +127,24 @@ def argument_parser():
 
 if __name__ == '__main__':
     args = argument_parser()
+    print(args.xml_folder)
     for in_xml in glob.glob(args.xml_folder + '*.xml.gz'):
+        print(in_xml)
+        as_json = in_xml.replace(".xml.gz",".json")
         js = extract_sentences(in_xml,args.output_folder)#, folder_name)
-        with open(in_xml + ".json","w") as f:
+        with open(as_json,"w") as f:
             f.write(js)
-        print(in_xml + " stored as .json")
+
+        file = os.path.basename(os.path.normpath(in_xml))
+        file = file + ".json"
+
+        if not os.path.exists(args.output_folder):
+            os.makedirs(args.output_folder)
+        with open(os.path.join(args.output_folder,file),"w") as f:
+            f.write(js)
+
+### PROFILING ###
+
     stats = pstats.Stats("profiling_results")
     stats.sort_stats("tottime")
     stats.print_stats(10)
-
-# json, nimeä inputin mukaan? xml replace -> json
-# tallenna eri kansioihin (tee oma)
-
-        # for item in doc.findall('PMID'):
-        #     print(item.text)
-
-        # text = ''
-        # doc_id = [item.text for item in doc.findall('PMID')][0]
-        # print(doc_id)
-
-        # for a in doc.findall('Article/AuthorList/Author/LastName'):
-        #     if a.text not in authors:
-        #         authors.append(a.text)
-        #         numAuthors += 1
-
-        # collectives = [a.text for a in doc.findall('Article/AuthorList/Author/CollectiveName')]
-        # if collectives != '':
-        #     print(collectives)
-
-        # for list in doc.findall('.//AuthorList'):
-        #     name = list.get('LastName')
-        #     print(name)
-
-    # tags = [elem.tag for elem in docs.iter()]
-
-        # for article in doc.iter('Author'): # the attributes of 'Author'
-        #     print(article.attrib)
-
-
-            # authors = [a.text for a in doc.findall('Article/AuthorList/Author/LastName')]
-            # print(authors)
